@@ -53,6 +53,23 @@ def test_fetch_price_with_regex_fallback():
     assert result.price == 4999.0
 
 
+def test_fetch_price_falls_back_when_selector_matches_empty_element():
+    html = (
+        "<html><body><span class='price'></span>"
+        "Total price: 4,999</body></html>"
+    )
+    session = _fake_session(html)
+
+    result = fetch_price(
+        "https://example.com/item",
+        price_selector=".price",
+        price_regex=r"Total price:\s*([\d,.]+)",
+        session=session,
+    )
+
+    assert result.price == 4999.0
+
+
 def test_fetch_price_raises_when_not_found():
     html = "<html><body><span class='other'>no price</span></body></html>"
     session = _fake_session(html)

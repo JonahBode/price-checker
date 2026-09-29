@@ -121,12 +121,12 @@ def fetch_price(
             if not snippet:
                 selector_status = f"selector {price_selector!r} matched an empty element"
 
-    if snippet is None and price_regex:
+    if not snippet and price_regex:
         match = re.search(price_regex, response.text)
         if match:
             snippet = match.group(0)
 
-    if snippet is None:
+    if not snippet:
         tried = []
         if selector_status:
             tried.append(selector_status)
