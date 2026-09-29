@@ -1,0 +1,20 @@
+{
+  "regions": [
+    { "name": "local", "proxy": null },
+    { "name": "india", "proxy": "http://in-proxy.example.com:8080" },
+    { "name": "vietnam", "proxy": "socks5h://vn-proxy.example.com:1080" }
+  ],
+  "targets": [
+    {
+      "name": "Example flight search",
+      "url": "https://example.com/flights?from=JFK&to=DEL",
+      "price_selector": ".price-total",
+      "currency_hint": "USD"
+    },
+    {
+      "name": "Example hotel booking",
+      "url": "https://example.com/hotels/123",
+      "price_regex": "Total price:\\s*([\\d,.]+)"
+    }
+  ]
+}
