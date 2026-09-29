@@ -117,3 +117,24 @@ def test_main_returns_failure_exit_code_when_all_regions_fail(tmp_path, monkeypa
     exit_code = cli.main([str(config_path)])
 
     assert exit_code == 1
+
+
+def test_main_returns_error_exit_code_for_missing_config(tmp_path, capsys):
+    missing_path = tmp_path / "does-not-exist.json"
+
+    exit_code = cli.main([str(missing_path)])
+
+    assert exit_code == 3
+    err = capsys.readouterr().err
+    assert "failed to load config" in err
+
+
+def test_main_returns_error_exit_code_for_invalid_config(tmp_path, capsys):
+    config_path = tmp_path / "config.json"
+    config_path.write_text(json.dumps({"regions": [], "targets": []}))
+
+    exit_code = cli.main([str(config_path)])
+
+    assert exit_code == 3
+    err = capsys.readouterr().err
+    assert "failed to load config" in err

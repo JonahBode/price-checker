@@ -68,7 +68,8 @@ def build_arg_parser() -> argparse.ArgumentParser:
         description=(
             "Check a set of web pages for dynamic pricing differences across "
             "regions/VPN exit points. Exit code is 0 if every region/target "
-            "succeeded, 1 if none succeeded, and 2 if some (but not all) failed."
+            "succeeded, 1 if none succeeded, 2 if some (but not all) failed, "
+            "and 3 if the config file itself could not be loaded."
         ),
     )
     parser.add_argument("config", help="Path to a JSON config file (see README).")
@@ -90,7 +91,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser = build_arg_parser()
     args = parser.parse_args(argv)
 
-    config = load_config(args.config)
+    try:
+        config = load_config(args.config)
+    except (OSError, ValueError) as exc:
+        print(f"error: failed to load config {args.config!r}: {exc}", file=sys.stderr)
+        return 3
+
     reports = run_check(config.targets, config.regions, timeout=args.timeout)
 
     for report in reports:

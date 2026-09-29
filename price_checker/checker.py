@@ -6,8 +6,6 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import List, Optional
 
-import requests
-
 from .config import Region, Target
 from .scraper import PriceNotFoundError, ScrapeResult, fetch_price
 
@@ -66,7 +64,7 @@ def _fetch_region(target: Target, region: Region, fetch_kwargs: dict) -> RegionR
             **fetch_kwargs,
         )
         return RegionResult(region=region, result=result)
-    except (requests.RequestException, PriceNotFoundError, ValueError, OSError) as exc:
+    except (PriceNotFoundError, ValueError, OSError) as exc:
         return RegionResult(region=region, error=str(exc))
 
 

@@ -59,8 +59,9 @@ any region that failed to load, and highlights the cheapest region and
 the price spread.
 
 Exit codes: `0` if every region/target succeeded, `1` if none
-succeeded, `2` if some (but not all) region/target checks failed --
-handy for detecting partial failures in scripts/CI.
+succeeded, `2` if some (but not all) region/target checks failed, and
+`3` if the config file itself could not be loaded -- handy for
+detecting partial failures in scripts/CI.
 
 ## Notes & limitations
 
