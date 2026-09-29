@@ -67,7 +67,8 @@ def build_arg_parser() -> argparse.ArgumentParser:
         prog="price_checker",
         description=(
             "Check a set of web pages for dynamic pricing differences across "
-            "regions/VPN exit points."
+            "regions/VPN exit points. Exit code is 0 if every region/target "
+            "succeeded, 1 if none succeeded, and 2 if some (but not all) failed."
         ),
     )
     parser.add_argument("config", help="Path to a JSON config file (see README).")
@@ -103,8 +104,14 @@ def main(argv: Optional[List[str]] = None) -> int:
             with open(args.csv, "w", newline="", encoding="utf-8") as fh:
                 _write_csv(reports, fh)
 
-    any_success = any(report.successful for report in reports)
-    return 0 if any_success else 1
+    total_results = sum(len(report.region_results) for report in reports)
+    total_successes = sum(len(report.successful) for report in reports)
+
+    if total_successes == 0:
+        return 1
+    if total_successes < total_results:
+        return 2
+    return 0
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ from price_checker.scraper import PriceNotFoundError, extract_price
         ("Rs. 4999", 4999.0, None),
         ("Total: 999", 999.0, None),
         ("₹ 45,000", 45000.0, "₹"),
+        ("SKU 123", 123.0, None),
     ],
 )
 def test_extract_price(text, expected_price, expected_currency):

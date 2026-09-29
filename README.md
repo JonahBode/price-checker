@@ -58,6 +58,10 @@ For each target this prints the price seen from every region, flags
 any region that failed to load, and highlights the cheapest region and
 the price spread.
 
+Exit codes: `0` if every region/target succeeded, `1` if none
+succeeded, `2` if some (but not all) region/target checks failed --
+handy for detecting partial failures in scripts/CI.
+
 ## Notes & limitations
 
 * Respect the target website's terms of service and `robots.txt`

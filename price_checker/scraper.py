@@ -14,11 +14,19 @@ DEFAULT_USER_AGENT = (
     "+https://github.com/JonahBode/price-checker)"
 )
 
+# A reasonably common subset of ISO 4217 currency codes. Restricting the
+# 3-letter currency match to this list avoids false positives like "SKU 123"
+# being parsed as currency "SKU".
+_ISO_CURRENCY_CODES = (
+    "USD|EUR|GBP|JPY|CNY|INR|VND|AUD|CAD|CHF|HKD|SGD|SEK|NOK|DKK|NZD|"
+    "KRW|MXN|BRL|ZAR|THB|IDR|MYR|PHP|TRY|RUB|AED|SAR|PLN|CZK"
+)
+
 # Matches things like "$1,234.56", "1.234,56 EUR", "Rs. 4999", "1234"
 _PRICE_PATTERN = re.compile(
-    r"(?P<currency>[€£$¥₹]|[A-Z]{3})?\s*"
+    rf"(?P<currency>[€£$¥₹]|\b(?:{_ISO_CURRENCY_CODES})\b)?\s*"
     r"(?P<amount>\d[\d,.\s]*\d|\d)"
-    r"\s*(?P<currency_suffix>[€£$¥₹]|[A-Z]{3})?"
+    rf"\s*(?P<currency_suffix>[€£$¥₹]|\b(?:{_ISO_CURRENCY_CODES})\b)?"
 )
 
 

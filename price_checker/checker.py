@@ -69,7 +69,7 @@ def check_target(target: Target, regions: List[Region], **fetch_kwargs) -> Check
                 **fetch_kwargs,
             )
             region_results.append(RegionResult(region=region, result=result))
-        except (requests.RequestException, PriceNotFoundError, ValueError) as exc:
+        except (requests.RequestException, PriceNotFoundError, ValueError, OSError) as exc:
             region_results.append(RegionResult(region=region, error=str(exc)))
 
     return CheckReport(target=target, region_results=region_results)

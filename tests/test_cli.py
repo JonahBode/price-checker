@@ -58,3 +58,62 @@ def test_main_runs_end_to_end(tmp_path, monkeypatch, capsys):
     out = capsys.readouterr().out
     assert "Flight" in out
     assert "cheapest region: local" in out
+
+
+def test_main_returns_partial_failure_exit_code(tmp_path, monkeypatch):
+    config_path = tmp_path / "config.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "regions": [
+                    {"name": "local", "proxy": None},
+                    {"name": "broken", "proxy": "http://dead-proxy:1"},
+                ],
+                "targets": [
+                    {
+                        "name": "Flight",
+                        "url": "https://example.com",
+                        "price_selector": ".price",
+                    }
+                ],
+            }
+        )
+    )
+
+    def fake_fetch_price(url, *, proxies=None, **kwargs):
+        if proxies:
+            raise OSError("proxy unreachable")
+        return ScrapeResult("u", "$10", 10.0, "$")
+
+    monkeypatch.setattr("price_checker.checker.fetch_price", fake_fetch_price)
+
+    exit_code = cli.main([str(config_path)])
+
+    assert exit_code == 2
+
+
+def test_main_returns_failure_exit_code_when_all_regions_fail(tmp_path, monkeypatch):
+    config_path = tmp_path / "config.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "regions": [{"name": "local", "proxy": None}],
+                "targets": [
+                    {
+                        "name": "Flight",
+                        "url": "https://example.com",
+                        "price_selector": ".price",
+                    }
+                ],
+            }
+        )
+    )
+
+    def fake_fetch_price(*args, **kwargs):
+        raise ValueError("boom")
+
+    monkeypatch.setattr("price_checker.checker.fetch_price", fake_fetch_price)
+
+    exit_code = cli.main([str(config_path)])
+
+    assert exit_code == 1
