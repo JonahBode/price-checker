@@ -111,10 +111,15 @@ def fetch_price(
     soup = BeautifulSoup(response.text, "html.parser")
 
     snippet = None
+    selector_status = None
     if price_selector:
         element = soup.select_one(price_selector)
-        if element is not None:
+        if element is None:
+            selector_status = f"selector {price_selector!r} matched no element"
+        else:
             snippet = element.get_text(" ", strip=True)
+            if not snippet:
+                selector_status = f"selector {price_selector!r} matched an empty element"
 
     if snippet is None and price_regex:
         match = re.search(price_regex, response.text)
@@ -123,10 +128,12 @@ def fetch_price(
 
     if snippet is None:
         tried = []
-        if price_selector:
+        if selector_status:
+            tried.append(selector_status)
+        elif price_selector:
             tried.append(f"selector {price_selector!r}")
         if price_regex:
-            tried.append(f"regex {price_regex!r}")
+            tried.append(f"regex {price_regex!r} matched no text")
         raise PriceNotFoundError(
             f"no price found on {url} (tried {' and '.join(tried)})"
         )

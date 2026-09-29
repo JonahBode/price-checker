@@ -1,3 +1,5 @@
+import requests
+
 from price_checker.checker import check_target, run_check
 from price_checker.config import Region, Target
 from price_checker.scraper import ScrapeResult
@@ -13,7 +15,7 @@ def test_check_target_success_and_failure(monkeypatch):
     def fake_fetch_price(url, *, price_selector=None, price_regex=None, proxies=None, headers=None, **kwargs):
         if proxies is None:
             return ScrapeResult(url=url, raw_text="$100", price=100.0, currency="$")
-        raise RuntimeError("proxy timed out")
+        raise requests.exceptions.ProxyError("proxy timed out")
 
     monkeypatch.setattr("price_checker.checker.fetch_price", fake_fetch_price)
 

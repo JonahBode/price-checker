@@ -5,8 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Optional
 
+import requests
+
 from .config import Region, Target
-from .scraper import ScrapeResult, fetch_price
+from .scraper import PriceNotFoundError, ScrapeResult, fetch_price
 
 
 @dataclass(frozen=True)
@@ -67,7 +69,7 @@ def check_target(target: Target, regions: List[Region], **fetch_kwargs) -> Check
                 **fetch_kwargs,
             )
             region_results.append(RegionResult(region=region, result=result))
-        except Exception as exc:  # noqa: BLE001 - report per-region failures
+        except (requests.RequestException, PriceNotFoundError, ValueError) as exc:
             region_results.append(RegionResult(region=region, error=str(exc)))
 
     return CheckReport(target=target, region_results=region_results)
