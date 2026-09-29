@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import List, Optional
 
@@ -54,28 +55,59 @@ class CheckReport:
         return priciest.result.price - cheapest.result.price
 
 
-def check_target(target: Target, regions: List[Region], **fetch_kwargs) -> CheckReport:
-    """Fetch ``target`` once per region and build a :class:`CheckReport`."""
+def _fetch_region(target: Target, region: Region, fetch_kwargs: dict) -> RegionResult:
+    try:
+        result = fetch_price(
+            target.url,
+            price_selector=target.price_selector,
+            price_regex=target.price_regex,
+            proxies=region.proxies(),
+            headers=target.headers,
+            **fetch_kwargs,
+        )
+        return RegionResult(region=region, result=result)
+    except (requests.RequestException, PriceNotFoundError, ValueError, OSError) as exc:
+        return RegionResult(region=region, error=str(exc))
 
-    region_results: List[RegionResult] = []
-    for region in regions:
-        try:
-            result = fetch_price(
-                target.url,
-                price_selector=target.price_selector,
-                price_regex=target.price_regex,
-                proxies=region.proxies(),
-                headers=target.headers,
-                **fetch_kwargs,
+
+def check_target(
+    target: Target,
+    regions: List[Region],
+    *,
+    max_workers: Optional[int] = None,
+    **fetch_kwargs,
+) -> CheckReport:
+    """Fetch ``target`` once per region (in parallel) and build a :class:`CheckReport`.
+
+    Regions are fetched concurrently with a thread pool since the dominant
+    cost is network I/O through each region's proxy; results are returned
+    in the same order as ``regions`` regardless of completion order.
+    """
+
+    if not regions:
+        return CheckReport(target=target, region_results=[])
+
+    workers = max_workers or len(regions)
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        region_results = list(
+            executor.map(
+                lambda region: _fetch_region(target, region, fetch_kwargs), regions
             )
-            region_results.append(RegionResult(region=region, result=result))
-        except (requests.RequestException, PriceNotFoundError, ValueError, OSError) as exc:
-            region_results.append(RegionResult(region=region, error=str(exc)))
+        )
 
     return CheckReport(target=target, region_results=region_results)
 
 
-def run_check(targets: List[Target], regions: List[Region], **fetch_kwargs) -> List[CheckReport]:
+def run_check(
+    targets: List[Target],
+    regions: List[Region],
+    *,
+    max_workers: Optional[int] = None,
+    **fetch_kwargs,
+) -> List[CheckReport]:
     """Check every target against every region."""
 
-    return [check_target(target, regions, **fetch_kwargs) for target in targets]
+    return [
+        check_target(target, regions, max_workers=max_workers, **fetch_kwargs)
+        for target in targets
+    ]
