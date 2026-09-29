@@ -122,8 +122,13 @@ def fetch_price(
             snippet = match.group(0)
 
     if snippet is None:
+        tried = []
+        if price_selector:
+            tried.append(f"selector {price_selector!r}")
+        if price_regex:
+            tried.append(f"regex {price_regex!r}")
         raise PriceNotFoundError(
-            f"no element matched selector {price_selector!r} on {url}"
+            f"no price found on {url} (tried {' and '.join(tried)})"
         )
 
     result = extract_price(snippet)
